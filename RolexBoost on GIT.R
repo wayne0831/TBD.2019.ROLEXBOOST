@@ -1,7 +1,7 @@
 #########################################################################################################################
 ### Project  : RolexBoost
 ### Script   : RolexBoost on GIT.R
-### Contents : A Rotation based Boosting Algorithm with Adaptive Loss Functions
+### Contents : A flexible boosting algorithm with adaptive loss functions
 #########################################################################################################################
 
 #########################################################################################################################
@@ -11,7 +11,7 @@
 rm(list = ls())
 
 # Load library
-pkgs <- c("rpart", "ada", "caTools", "ggplot2", "reshape", "dplyr", "PairedData", "car", "Matrix", "stringr", "randomForest")
+pkgs <- c("rpart", "ada", "caTools", "ggplot2", "reshape", "dplyr", "PairedData", "car", "reshape", "Matrix", "stringr", "randomForest")
 sapply(pkgs, require, character.only = T)
 
 # Load Datasets
@@ -26,9 +26,9 @@ load("functions.RData")
 ## Load the accuracy tables
 res.acc.all  <- read.csv(url("http://bit.ly/ROLEXBOOST"), header = TRUE)
 
-## Table 1. Description of the datasets // spambase -> admission
+## Table 1. Description of the datasets 
 table.1.tmp <- matrix(NA, length(df.all), 2, dimnames = list(names(df.all), c("No.Instances", "No.Attributes")))
-for (i in 1:nrow(table.1.tmp)){table.1.tmp[i,] <- dim(df.all[[i]]) - c(0, sum(grepl("class", names(df.all[[i]]))) - 1)}
+for (i in 1:nrow(table.1.tmp)){table.1.tmp[i,] <- dim(df.all[[i]]) - c(0, 1)}
 table.1     <- table.1.tmp[-c(17:18, 20:21, 23:24, 26:27, 29:30),]
 table.1     <- cbind(table.1, No.Classes = c(rep(2, 15), rep(3, 5)))
 
@@ -39,7 +39,7 @@ acc.mean            <- aggregate(x = res.acc.all[, c(3:9)], by = list(res.acc.al
 table.2.tmp         <- rbind(acc.mean, lapply(acc.mean, mean), c(NA, table(as.factor(c(1,2,3,4,5,6,7))[apply(acc.mean[ ,-1][-15, ], 1, which.max)])))
 table.2.tmp[, 2:8]  <- round(table.2.tmp[, 2:8], 4)
 table.2             <- table.2.tmp[c(1, 5:7, 11:14, 18:20, 24:27, 2:4, 8:10, 15:17, 21:23, 28:32),]
-table.2[, 1]        <- c(na.omit(levels(table.2[, 1])), "Avg.acc", "Number of win")
+table.2[, 1]        <- c(na.omit(labels(df.all)), "Avg.acc", "Number of win")
 
 print(table.2)
 
@@ -69,28 +69,28 @@ for (i in 1:35){res.rank.ratio.tmp[i + 7,] <- res.rank.ratio.tmp[i + 7,] + res.r
 res.rank.ratio     <- data.frame(Top_n     = c(rep("Top1", 7), rep("Top2", 7), rep("Top3", 7), rep("Top4", 7), rep("Top5", 7), rep("Top6", 7)),
                                  Algorithm = rep(c(1:7), 6),
                                  Ratio     = res.rank.ratio.tmp)
-                                         
+
 figure.2 <- ggplot(data = res.rank.ratio, aes(x = Top_n, y = Ratio, fill = factor(Algorithm))) +
-              geom_bar(stat = "identity", position = position_dodge(), width = 0.7) +
-              scale_y_continuous(expand = c(0,0)) +
-              coord_cartesian(ylim = c(0.0,1.05)) +
-              theme_bw() +
-              theme(legend.position = c(0.068,0.85), legend.title = element_text(size = 20)) +
-              labs(x = "Top-n", y = "Ratio", fill = "Algorithm") +
-              theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 18)) +
-              theme(axis.title.y = element_text(family = 'sans' , face = 2, color = 'black', size = 18)) +
-              theme(axis.text.x  = element_text(family = 'sans' , face = 2, color = 'black', size = 18)) +
-              theme(axis.text.y  = element_text(family = 'sans' , face = 2, color = 'black', size = 18)) +
-              theme(plot.title   = element_text(family = 'sans' , face = 2, color = 'black', size = 18)) +
-              theme(legend.text  = element_text(size = 10)) +
-              geom_text(aes(label = round(Ratio, 2)), color = "black", vjust = -0.5, position = position_dodge(0.69), size = 3) +
-              scale_fill_manual(values = c("green3", "blue2", "grey", "yellow", "orange", "purple", "red2"),
-                                labels = c("AdaBoost", "GentlBoost", "RotationForest", "RandomForest", "RotationBoost", "FlexBoost", "RolexBoost")) +
-              guides(fill = guide_legend(keywidth = 0.2, keyheight = 0.2, default.unit = "inch"))
+  geom_bar(stat = "identity", position = position_dodge(), width = 0.7) +
+  scale_y_continuous(expand = c(0,0)) +
+  coord_cartesian(ylim = c(0.0,1.05)) +
+  theme_bw() +
+  theme(legend.position = c(0.075, 0.9), legend.title = element_text(size = 10), 
+        legend.text = element_text(size = 5)) +
+  labs(x = "Top-n", y = "Ratio", fill = "Algorithm") +
+  theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
+  theme(axis.title.y = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
+  theme(axis.text.x  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
+  theme(axis.text.y  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
+  theme(plot.title   = element_text(family = 'sans' , face = 2, color = 'black', size = 13)) +
+  theme(legend.text  = element_text(family = 'Times New Roman', size = 10)) +
+  theme(legend.title = element_blank()) +
+  geom_text(aes(label = round(Ratio, 2)), color = "black", vjust = -0.5, position = position_dodge(0.69), family = 'Times New Roman', size = 4) +
+  scale_fill_manual(values = c("lightgrey", "powderblue", "lightsteelblue", "khaki", "burlywood", "lightpink", "darkseagreen"),
+                    labels = c("AdaBoost", "GentlBoost", "RotationForest", "RandomForest", "RotationBoost", "FlexBoost", "RolexBoost")) +
+  guides(fill = guide_legend(keywidth = 0.2, keyheight = 0.2, default.unit = "inch"))
 
 print(figure.2)
-
-## Discussion
 
 #########################################################################################################################
 ### Appendix. Experiment
