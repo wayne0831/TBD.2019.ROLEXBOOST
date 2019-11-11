@@ -70,13 +70,15 @@ for (i in 1:35){res.rank.ratio.tmp[i + 7,] <- res.rank.ratio.tmp[i + 7,] + res.r
 res.rank.ratio     <- data.frame(Top_n     = c(rep("Top1", 7), rep("Top2", 7), rep("Top3", 7), rep("Top4", 7), rep("Top5", 7), rep("Top6", 7)),
                                  Algorithm = rep(c(1:7), 6),
                                  Ratio     = res.rank.ratio.tmp)
+res.rank.ratio$adj.y <- res.rank.ratio$Ratio
+res.rank.ratio$adj.y[c(34, 41)] <- res.rank.ratio$adj.y[c(34, 41)] - 0.04
 
 figure.2 <- ggplot(data = res.rank.ratio, aes(x = Top_n, y = Ratio, fill = factor(Algorithm))) +
   geom_bar(stat = "identity", position = position_dodge(), width = 0.7) +
   scale_y_continuous(expand = c(0,0)) +
   coord_cartesian(ylim = c(0.0,1.05)) +
   theme_bw() +
-  theme(legend.position = c(0.075, 0.9), legend.title = element_text(size = 10), 
+  theme(legend.position = c(0.06, 0.82), legend.title = element_text(size = 10), 
         legend.text = element_text(size = 5)) +
   labs(x = "Top-n", y = "Ratio", fill = "Algorithm") +
   theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
@@ -86,7 +88,7 @@ figure.2 <- ggplot(data = res.rank.ratio, aes(x = Top_n, y = Ratio, fill = facto
   theme(plot.title   = element_text(family = 'sans' , face = 2, color = 'black', size = 13)) +
   theme(legend.text  = element_text(family = 'Times New Roman', size = 10)) +
   theme(legend.title = element_blank()) +
-  geom_text(aes(label = round(Ratio, 2)), color = "black", vjust = c(rep(-0.5, 28), -1, rep(-0.5, 6), -1.5, rep(-0.5, 6)), position = position_dodge(0.69), family = 'Times New Roman', size = 4) +
+  geom_text(aes(y = adj.y, label = round(Ratio, 2)), color = "black", vjust = -0.5, position = position_dodge(0.69), family = 'Times New Roman', size = 4) +
   scale_fill_manual(values = c("lightgrey", "powderblue", "lightsteelblue", "khaki", "burlywood", "lightpink", "darkseagreen"),
                     labels = c("AdaBoost", "GentlBoost", "RotationForest", "RandomForest", "RotationBoost", "FlexBoost", "RolexBoost")) +
   guides(fill = guide_legend(keywidth = 0.2, keyheight = 0.2, default.unit = "inch"))
@@ -129,4 +131,3 @@ kfold.flex(df = data, flex_iter = iter, par.k = par_k)
 ## K-fold RolexBoost
 kfold.rolex(df = data, rot_iter = 1, flex_iter = iter, par.k = par_k)
   
-
