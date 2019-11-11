@@ -70,7 +70,7 @@ for (i in 1:35){res.rank.ratio.tmp[i + 7,] <- res.rank.ratio.tmp[i + 7,] + res.r
 res.rank.ratio     <- data.frame(Top_n     = c(rep("Top1", 7), rep("Top2", 7), rep("Top3", 7), rep("Top4", 7), rep("Top5", 7), rep("Top6", 7)),
                                  Algorithm = rep(c(1:7), 6),
                                  Ratio     = res.rank.ratio.tmp)
-res.rank.ratio$adj.y <- res.rank.ratio$Ratio
+res.rank.ratio$adj.y            <- res.rank.ratio$Ratio
 res.rank.ratio$adj.y[c(34, 41)] <- res.rank.ratio$adj.y[c(34, 41)] - 0.04
 
 figure.2 <- ggplot(data = res.rank.ratio, aes(x = Top_n, y = Ratio, fill = factor(Algorithm))) +
@@ -131,3 +131,4 @@ kfold.flex(df = data, flex_iter = iter, par.k = par_k)
 ## K-fold RolexBoost
 kfold.rolex(df = data, rot_iter = 1, flex_iter = iter, par.k = par_k)
   
+
