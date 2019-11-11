@@ -62,6 +62,7 @@ table.3   <- as.data.frame(matrix(rbind(matrix(round(res.p.val, 4), 7, 7), as.ch
 print(table.3)
 
 ## Top-n rank plot
+windowsFonts("Times New Roman" = windowsFont("Times New Roman"))
 res.rank.ratio.tmp <- c()
 for (i in 1:6){ res.rank.ratio.tmp <- cbind(res.rank.ratio.tmp, apply(res.ranks, 2, function(x){ length(which(x == i)) / length(x) })) }
 res.rank.ratio.tmp <- matrix(res.rank.ratio.tmp, 42, 1)
@@ -85,7 +86,7 @@ figure.2 <- ggplot(data = res.rank.ratio, aes(x = Top_n, y = Ratio, fill = facto
   theme(plot.title   = element_text(family = 'sans' , face = 2, color = 'black', size = 13)) +
   theme(legend.text  = element_text(family = 'Times New Roman', size = 10)) +
   theme(legend.title = element_blank()) +
-  geom_text(aes(label = round(Ratio, 2)), color = "black", vjust = -0.5, position = position_dodge(0.69), family = 'Times New Roman', size = 4) +
+  geom_text(aes(label = round(Ratio, 2)), color = "black", vjust = c(rep(-0.5, 28), -1, rep(-0.5, 6), -1.5, rep(-0.5, 6)), position = position_dodge(0.69), family = 'Times New Roman', size = 4) +
   scale_fill_manual(values = c("lightgrey", "powderblue", "lightsteelblue", "khaki", "burlywood", "lightpink", "darkseagreen"),
                     labels = c("AdaBoost", "GentlBoost", "RotationForest", "RandomForest", "RotationBoost", "FlexBoost", "RolexBoost")) +
   guides(fill = guide_legend(keywidth = 0.2, keyheight = 0.2, default.unit = "inch"))
@@ -128,3 +129,4 @@ kfold.flex(df = data, flex_iter = iter, par.k = par_k)
 ## K-fold RolexBoost
 kfold.rolex(df = data, rot_iter = 1, flex_iter = iter, par.k = par_k)
   
+
