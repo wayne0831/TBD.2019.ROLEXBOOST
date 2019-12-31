@@ -11,7 +11,8 @@
 rm(list = ls())
 
 # Load library
-pkgs <- c("rpart", "ada", "caTools", "ggplot2", "reshape", "dplyr", "PairedData", "car", "reshape", "Matrix", "stringr", "randomForest")
+pkgs <- c("rpart", "ada", "caTools", "ggplot2", "reshape", "dplyr", "PairedData", "car", "reshape", "Matrix", "stringr", "randomForest", "ECoL", "FSA", "gridExtra")
+sapply(pkgs, install.packages, character.only = T) 
 sapply(pkgs, require, character.only = T)
 
 # Load Datasets
@@ -34,30 +35,33 @@ table.1     <- cbind(table.1, No.Classes = c(rep(2, 15), rep(3, 5)))
 
 print(table.1)
 
-## Performance benchmarks (accuracy)
+## Performance benchmarks (accuracy and rank)
+res.ranks <- as.matrix(res.acc.all[, c(3:9)])
+for (i in 1:nrow(res.ranks)){res.ranks[i,] <- rank(-res.acc.all[i, c(3:9)], ties.method = "min")}
+res.mrank           <- round(colMeans(unlist(res.ranks)), 2)
 acc.mean            <- aggregate(x = res.acc.all[, c(3:9)], by = list(res.acc.all[, 2]), mean)
-table.2.tmp         <- rbind(acc.mean, lapply(acc.mean, mean), c(NA, table(as.factor(c(1,2,3,4,5,6,7))[apply(acc.mean[ ,-1][-15, ], 1, which.max)])))
+table.2.tmp         <- rbind(acc.mean, lapply(acc.mean, mean), res.mrank[c(7, 1:6)])
 table.2.tmp[, 2:8]  <- round(table.2.tmp[, 2:8], 4)
 table.2             <- table.2.tmp[c(1, 5:7, 11:14, 18:20, 24:27, 2:4, 8:10, 15:17, 21:23, 28:32),]
-table.2[, 1]        <- c(na.omit(labels(df.all)), "Avg.acc", "Number of win")
+table.2[, 1]        <- c(na.omit(labels(df.all)), "Mean.acc", "Mean.rank")
 
 print(table.2)
 
-## Friedman post hoc test results (p-value) on rankings and average accuracies
-res.ranks <- as.matrix(res.acc.all[, c(3:9)])
-for (i in 1:nrow(res.ranks)){res.ranks[i,] <- rank(-res.acc.all[i, c(3:9)], ties.method = "min")}
+## Post hoc (Nemenyi, Bonferroni-Dunn) test results (p-value) 
 res.fm.ph <- friedman.post.hoc(value ~ X2 | X1, data = melt(res.ranks))
-res.p.val <- c(rep(NA, 7),                                               # adaboost
-               res.fm.ph$PostHoc.Test[2], rep(NA, 6),                    # gentleboost
-               res.fm.ph$PostHoc.Test[c(6, 15)], rep(NA, 5),             # rotation forest
-               res.fm.ph$PostHoc.Test[c(3, 12, 18)], rep(NA, 4),         # random forest
-               res.fm.ph$PostHoc.Test[c(5, 14, 21, 17)], rep(NA, 3),     # rotation boost
-               res.fm.ph$PostHoc.Test[c(1, 7, 11, 8, 10)], rep(NA, 2),   # flexboost
-               res.fm.ph$PostHoc.Test[c(4, 13, 20, 16, 19, 9)], NA)      # rolex boost  (rish alpha = 0.05 / 21 = 0.0024)    
-res.mrank <- colMeans(unlist(res.ranks))
-res.macc  <- as.character(round(colMeans(res.acc.all[,c(3:9)]), 4))
-table.3   <- as.data.frame(matrix(rbind(matrix(round(res.p.val, 4), 7, 7), as.character(round(colMeans(res.ranks), 2)), res.macc), 
-                                  nrow = 9, ncol = 7, dimnames = list(c(names(res.mrank), "Mean Rank", "Mean Accuracy"), names(res.mrank))))
+res.dunn  <- dunnTest(melt(res.ranks)[, 3], melt(res.ranks)[, 2], method = 'bonferroni')$res
+p.val.vec <- as.matrix(res.dunn[4])
+res.p.val <- c(rep(NA, 7),                                              
+               res.fm.ph$PostHoc.Test[2], rep(NA, 6),                    
+               res.fm.ph$PostHoc.Test[c(6, 15)], rep(NA, 5),            
+               res.fm.ph$PostHoc.Test[c(3, 12, 18)], rep(NA, 4),         
+               res.fm.ph$PostHoc.Test[c(5, 14, 21, 17)], rep(NA, 3),     
+               res.fm.ph$PostHoc.Test[c(1, 7, 11, 8, 10)], rep(NA, 2),  
+               res.fm.ph$PostHoc.Test[c(4, 13, 20, 16, 19, 9)], NA,      # Nemenyi test
+               p.val.vec[c(7, 9, 20, 10, 15, 8)], NA)                    # Bonferroni-Dunn test
+
+table.3   <- as.data.frame(matrix(matrix(round(res.p.val, 3), 7, 8), nrow = 7, ncol = 8, 
+                                  dimnames = list(c(names(res.mrank)), c(names(res.mrank), names(res.mrank)[7]))))
 
 print(table.3)
 
@@ -95,6 +99,43 @@ figure.2 <- ggplot(data = res.rank.ratio, aes(x = Top_n, y = Ratio, fill = facto
 
 print(figure.2)
 
+
+## Plot the relationship between Degree of rotation(F3) and Performance improvement
+# uci
+figure.3.uci <- ggplot(res.dis$uci, aes(x = res.dis$uci[ ,1], y = res.dis$uci[, 2], color = factor(res.dis$uci[, 3]))) + 
+  geom_point() +
+  labs(x = 'Degree of complexity change (in F3) through rotation', y = 'Performance improvement from FlexBoost to RolexBoost') +
+  theme_bw() +
+  theme(legend.text = element_text(size = 15), legend.title = element_blank(), 
+        legend.position = c(0.091, 0.91), legend.background = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
+  theme(axis.title.y = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
+  theme(axis.text.x  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
+  theme(axis.text.y  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
+  guides(colour = guide_legend(override.aes = list(size = 5), reverse = TRUE)) +
+  geom_vline(xintercept = 0, color = 'grey')
+
+# art
+figure.3.art <- ggplot(res.dis$art, aes(x = res.dis$art[ ,1], y = res.dis$art[, 2], color = factor(res.dis$art[, 3]))) + 
+  geom_point() +
+  labs(x = 'Degree of complexity change (in F3) through rotation', y = 'Performance improvement from FlexBoost to RolexBoost') +
+  theme_bw() +
+  theme(legend.text = element_text(size = 15), legend.title = element_blank(), 
+        legend.position = c(0.091, 0.901), legend.background = element_rect(fill = "transparent", colour = "transparent")) +
+  theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
+  theme(axis.title.y = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
+  theme(axis.text.x  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
+  theme(axis.text.y  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
+  guides(colour = guide_legend(override.aes = list(size = 5), reverse = TRUE)) +
+  geom_vline(xintercept = 0, color = 'grey') +
+  scale_x_continuous(breaks = seq(-0.2, 0.1, 0.05)) +
+  scale_y_continuous(breaks = seq(-0.05, 0.1, 0.025))
+
+figure.3 <- grid.arrange(figure.3.uci, figure.3.art, nrow = 1, ncol = 2)
+
+print(figure.3)
+
+
 #########################################################################################################################
 ### Appendix. Experiment
 #########################################################################################################################
@@ -118,7 +159,7 @@ kfold.gentle(iteration = iter)
 
 ## K-fold RotationForest
 kfold.rotationForest(iteration = iter) 
-  
+
 ## K-fold RandomForest
 kfold.randomForest(iteration = iter)
 
@@ -129,6 +170,4 @@ kfold.rotboost(df = data, rot_iter = 1, boost_iter = iter)
 kfold.flex(df = data, flex_iter = iter, par.k = par_k) 
 
 ## K-fold RolexBoost
-kfold.rolex(df = data, rot_iter = 1, flex_iter = iter, par.k = par_k)
-  
-
+kfold.rolex(df = data, n.subset = 3, rot_iter = 1, flex_iter = iter, par.k = par_k)
