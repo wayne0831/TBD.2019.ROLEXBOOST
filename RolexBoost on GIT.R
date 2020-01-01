@@ -107,7 +107,7 @@ figure.3.uci <- ggplot(res.dis$uci, aes(x = res.dis$uci[ ,1], y = res.dis$uci[, 
   labs(x = 'Degree of complexity change (in F3) through rotation', y = 'Performance improvement from FlexBoost to RolexBoost') +
   theme_bw() +
   theme(legend.text = element_text(size = 15), legend.title = element_blank(), 
-        legend.position = c(0.091, 0.91), legend.background = element_rect(fill = "transparent", colour = "transparent")) +
+        legend.position = c(0.05, 0.91), legend.background = element_rect(fill = "transparent", colour = "transparent")) +
   theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
   theme(axis.title.y = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
   theme(axis.text.x  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
@@ -121,14 +121,14 @@ figure.3.art <- ggplot(res.dis$art, aes(x = res.dis$art[ ,1], y = res.dis$art[, 
   labs(x = 'Degree of complexity change (in F3) through rotation', y = 'Performance improvement from FlexBoost to RolexBoost') +
   theme_bw() +
   theme(legend.text = element_text(size = 15), legend.title = element_blank(), 
-        legend.position = c(0.091, 0.901), legend.background = element_rect(fill = "transparent", colour = "transparent")) +
+        legend.position = c(0.05, 0.901), legend.background = element_rect(fill = "transparent", colour = "transparent")) +
   theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
   theme(axis.title.y = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
   theme(axis.text.x  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
   theme(axis.text.y  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
   guides(colour = guide_legend(override.aes = list(size = 5), reverse = TRUE)) +
   geom_vline(xintercept = 0, color = 'grey') +
-  scale_x_continuous(breaks = seq(-0.2, 0.1, 0.05)) +
+  scale_x_continuous(breaks = seq(-0.2, 0.25, 0.1)) +
   scale_y_continuous(breaks = seq(-0.05, 0.1, 0.025))
 
 figure.3 <- grid.arrange(figure.3.uci, figure.3.art, nrow = 1, ncol = 2)
