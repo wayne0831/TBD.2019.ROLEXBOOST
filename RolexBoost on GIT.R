@@ -1,12 +1,12 @@
-#########################################################################################################################
+################################################################################################################################################
 ### Project  : RolexBoost
 ### Script   : RolexBoost on GIT.R
 ### Contents : A flexible boosting algorithm with adaptive loss functions
-#########################################################################################################################
+################################################################################################################################################
 
-#########################################################################################################################
+################################################################################################################################################
 ### Setting up environment
-#########################################################################################################################
+################################################################################################################################################
 
 # Load library
 pkgs <- c("rpart", "ada", "caTools", "ggplot2", "reshape", "dplyr", "PairedData", "car", "reshape", "Matrix", "stringr", "randomForest", "ECoL", "FSA", "gridExtra")
@@ -19,9 +19,9 @@ load("datasets.RData")
 # Load Functions
 load("functions.RData")
 
-#########################################################################################################################
+################################################################################################################################################
 ### Analysis
-#########################################################################################################################
+################################################################################################################################################
 
 ## Table 1. Description of the datasets 
 table.1.tmp <- matrix(NA, length(df.all), 2, dimnames = list(names(df.all), c("No.Instances", "No.Attributes")))
@@ -96,7 +96,8 @@ figure.2 <- ggplot(data = res.rank.ratio, aes(x = Top_n, y = Ratio, fill = facto
 print(figure.2)
 
 
-## Figure 3. Relationship between the degree of complexity change through rotation and the performance improvement from FlexBoost to RolexBoost observed in 30 UCI datasets (left) and in 500 synthetic data (right). 
+## Figure 3. Relationship between the degree of complexity change through rotation and the performance improvement from FlexBoost to RolexBoost 
+## 30 UCI datasets (left)
 figure.3.left <- ggplot(res.dis$uci, aes(x = res.dis$uci[ ,1], y = res.dis$uci[, 2], color = factor(res.dis$uci[, 3]))) + 
                    geom_point() +
                    labs(x = 'Degree of complexity change (in F3) through rotation', y = 'Performance improvement from FlexBoost to RolexBoost') +
@@ -110,6 +111,7 @@ figure.3.left <- ggplot(res.dis$uci, aes(x = res.dis$uci[ ,1], y = res.dis$uci[,
                    guides(colour = guide_legend(override.aes = list(size = 5), reverse = TRUE)) +
                    geom_vline(xintercept = 0, color = 'grey')
 
+## 500 synthetic data (right)
 figure.3.right <- ggplot(res.dis$art, aes(x = res.dis$art[ ,1], y = res.dis$art[, 2], color = factor(res.dis$art[, 3]))) + 
                     geom_point() +
                     labs(x = 'Degree of complexity change (in F3) through rotation', y = 'Performance improvement from FlexBoost to RolexBoost') +
@@ -130,9 +132,9 @@ figure.3 <- grid.arrange(figure.3.left, figure.3.right, nrow = 1, ncol = 2)
 print(figure.3)
 
 
-#########################################################################################################################
+################################################################################################################################################
 ### Appendix. Experiment
-#########################################################################################################################
+################################################################################################################################################
 # Input
 seed        <- 1
 data        <- Iris2
