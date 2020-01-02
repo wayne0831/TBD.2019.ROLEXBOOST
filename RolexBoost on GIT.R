@@ -7,8 +7,6 @@
 #########################################################################################################################
 ### Setting up environment
 #########################################################################################################################
-# remove previous history
-rm(list = ls())
 
 # Load library
 pkgs <- c("rpart", "ada", "caTools", "ggplot2", "reshape", "dplyr", "PairedData", "car", "reshape", "Matrix", "stringr", "randomForest", "ECoL", "FSA", "gridExtra")
@@ -24,8 +22,6 @@ load("functions.RData")
 #########################################################################################################################
 ### Analysis
 #########################################################################################################################
-## Load the accuracy tables
-res.acc.all  <- read.csv(url("http://bit.ly/ROLEXBOOST"), header = TRUE)
 
 ## Table 1. Description of the datasets 
 table.1.tmp <- matrix(NA, length(df.all), 2, dimnames = list(names(df.all), c("No.Instances", "No.Attributes")))
@@ -35,7 +31,7 @@ table.1     <- cbind(table.1, No.Classes = c(rep(2, 15), rep(3, 5)))
 
 print(table.1)
 
-## Performance benchmarks (accuracy and rank)
+## Table 2. Performance benchmarks 
 res.ranks <- as.matrix(res.acc.all[, c(3:9)])
 for (i in 1:nrow(res.ranks)){res.ranks[i,] <- rank(-res.acc.all[i, c(3:9)], ties.method = "min")}
 res.mrank           <- round(colMeans(unlist(res.ranks)), 2)
@@ -47,7 +43,7 @@ table.2[, 1]        <- c(na.omit(labels(df.all)), "Mean.acc", "Mean.rank")
 
 print(table.2)
 
-## Post hoc (Nemenyi, Bonferroni-Dunn) test results (p-value) 
+## Table 3. Post-hoc test results (p-value) 
 res.fm.ph <- friedman.post.hoc(value ~ X2 | X1, data = melt(res.ranks))
 res.dunn  <- dunnTest(melt(res.ranks)[, 3], melt(res.ranks)[, 2], method = 'bonferroni')$res
 p.val.vec <- as.matrix(res.dunn[4])
@@ -65,7 +61,7 @@ table.3   <- as.data.frame(matrix(matrix(round(res.p.val, 3), 7, 8), nrow = 7, n
 
 print(table.3)
 
-## Top-n rank plot
+## Figure 2. Ratio of each algorithm included in the Top-n rank on 30 UCI datasets
 windowsFonts("Times New Roman" = windowsFont("Times New Roman"))
 res.rank.ratio.tmp <- c()
 for (i in 1:6){ res.rank.ratio.tmp <- cbind(res.rank.ratio.tmp, apply(res.ranks, 2, function(x){ length(which(x == i)) / length(x) })) }
@@ -100,38 +96,36 @@ figure.2 <- ggplot(data = res.rank.ratio, aes(x = Top_n, y = Ratio, fill = facto
 print(figure.2)
 
 
-## Plot the relationship between Degree of rotation(F3) and Performance improvement
-# uci
-figure.3.uci <- ggplot(res.dis$uci, aes(x = res.dis$uci[ ,1], y = res.dis$uci[, 2], color = factor(res.dis$uci[, 3]))) + 
-  geom_point() +
-  labs(x = 'Degree of complexity change (in F3) through rotation', y = 'Performance improvement from FlexBoost to RolexBoost') +
-  theme_bw() +
-  theme(legend.text = element_text(size = 15), legend.title = element_blank(), 
-        legend.position = c(0.05, 0.91), legend.background = element_rect(fill = "transparent", colour = "transparent")) +
-  theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
-  theme(axis.title.y = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
-  theme(axis.text.x  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
-  theme(axis.text.y  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
-  guides(colour = guide_legend(override.aes = list(size = 5), reverse = TRUE)) +
-  geom_vline(xintercept = 0, color = 'grey')
+## Figure 3. Relationship between the degree of complexity change through rotation and the performance improvement from FlexBoost to RolexBoost observed in 30 UCI datasets (left) and in 500 synthetic data (right). 
+figure.3.left <- ggplot(res.dis$uci, aes(x = res.dis$uci[ ,1], y = res.dis$uci[, 2], color = factor(res.dis$uci[, 3]))) + 
+                   geom_point() +
+                   labs(x = 'Degree of complexity change (in F3) through rotation', y = 'Performance improvement from FlexBoost to RolexBoost') +
+                   theme_bw() +
+                   theme(legend.text = element_text(size = 15), legend.title = element_blank(), 
+                         legend.position = c(0.05, 0.91), legend.background = element_rect(fill = "transparent", colour = "transparent")) +
+                   theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
+                   theme(axis.title.y = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
+                   theme(axis.text.x  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
+                   theme(axis.text.y  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
+                   guides(colour = guide_legend(override.aes = list(size = 5), reverse = TRUE)) +
+                   geom_vline(xintercept = 0, color = 'grey')
 
-# art
-figure.3.art <- ggplot(res.dis$art, aes(x = res.dis$art[ ,1], y = res.dis$art[, 2], color = factor(res.dis$art[, 3]))) + 
-  geom_point() +
-  labs(x = 'Degree of complexity change (in F3) through rotation', y = 'Performance improvement from FlexBoost to RolexBoost') +
-  theme_bw() +
-  theme(legend.text = element_text(size = 15), legend.title = element_blank(), 
-        legend.position = c(0.05, 0.901), legend.background = element_rect(fill = "transparent", colour = "transparent")) +
-  theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
-  theme(axis.title.y = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
-  theme(axis.text.x  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
-  theme(axis.text.y  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
-  guides(colour = guide_legend(override.aes = list(size = 5), reverse = TRUE)) +
-  geom_vline(xintercept = 0, color = 'grey') +
-  scale_x_continuous(breaks = seq(-0.2, 0.25, 0.1)) +
-  scale_y_continuous(breaks = seq(-0.05, 0.1, 0.025))
+figure.3.right <- ggplot(res.dis$art, aes(x = res.dis$art[ ,1], y = res.dis$art[, 2], color = factor(res.dis$art[, 3]))) + 
+                    geom_point() +
+                    labs(x = 'Degree of complexity change (in F3) through rotation', y = 'Performance improvement from FlexBoost to RolexBoost') +
+                    theme_bw() +
+                    theme(legend.text = element_text(size = 15), legend.title = element_blank(), 
+                          legend.position = c(0.05, 0.901), legend.background = element_rect(fill = "transparent", colour = "transparent")) +
+                    theme(axis.title.x = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
+                    theme(axis.title.y = element_text(family = 'sans' , face = 2, color = 'black', size = 15)) +
+                    theme(axis.text.x  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
+                    theme(axis.text.y  = element_text(family = 'sans' , face = 1, color = 'black', size = 13)) +
+                    guides(colour = guide_legend(override.aes = list(size = 5), reverse = TRUE)) +
+                    geom_vline(xintercept = 0, color = 'grey') +
+                    scale_x_continuous(breaks = seq(-0.2, 0.25, 0.1)) +
+                    scale_y_continuous(breaks = seq(-0.05, 0.1, 0.025))
 
-figure.3 <- grid.arrange(figure.3.uci, figure.3.art, nrow = 1, ncol = 2)
+figure.3 <- grid.arrange(figure.3.left, figure.3.right, nrow = 1, ncol = 2)
 
 print(figure.3)
 
